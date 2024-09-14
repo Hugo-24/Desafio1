@@ -1,3 +1,4 @@
+//Función base para la adquisición de datos con uso de memoria dinámica con ayuda de un arreglo
 #include <iostream>
 
 using namespace std;
