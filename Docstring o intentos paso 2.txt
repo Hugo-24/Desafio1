@@ -43,12 +43,40 @@ void almacenarDatos(float* datos, int& numDatos) {
     // Almacenar los datos en el arreglo dinámico
 }
 //2.2)
-// Función para calcular la frecuencia
+// Función para calcular la frecuencia y duración de un ciclo usando cruces por cero
     // Implementar un algoritmo para calcular la frecuencia. Nos puede servir mucho para contar el tiempo la funcion de arduino "millis()".
     //La funcion millis() es una herramienta para medir el tiempo en el programa. Devuelve el número de milisegundos transcurridos desde que tu placa Arduino inició el programa actual.
     // Nos puede servir contar las veces que valores coinciden con el eje x.
+
+void calcularFrecuenciaYCiclos(double* muestras, int numMuestras, double tiempoTotal) {
+    int crucesPorCero = 0;
+    int muestrasPorCiclo = 0;
+    bool encontradoPrimerCiclo = false;
+
+    for (int i = 1; i < numMuestras; i++) {
+        if ((muestras[i - 1] > 0 && muestras[i] < 0) || (muestras[i - 1] < 0 && muestras[i] > 0)) {
+            crucesPorCero++;
+            if (!encontradoPrimerCiclo) {
+                muestrasPorCiclo = i;  // Primer ciclo completo detectado
+                encontradoPrimerCiclo = true;
+            }
+        }
+    }
+
+    double ciclos = crucesPorCero / 2.0;
+    double frecuencia = ciclos / tiempoTotal;
+
+    if (encontradoPrimerCiclo) {
+        cout << "Frecuencia estimada: " << frecuencia << " Hz" << endl;
+        cout << "Duración de un ciclo: " << (muestrasPorCiclo * tiempoTotal / numMuestras) << " segundos" << endl;
+    } else {
+        cout << "No se detectaron suficientes ciclos." << endl;
+    }
+}
+
+
 //2.3)
-// Función para calcular la frecuencia
+// Función para calcular los valores maximos y minimos de la amplitud
 float calcularAmplitud() {
   float valorMaximo = 3.402823466e+38; // Mayor valor posible para un float
   float valorMinimo = -3.402823466e+38; // Menor valor posible para un float
