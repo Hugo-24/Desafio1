@@ -1,19 +1,45 @@
+// C++ code
+//
 int led = 13;
-int pin_boton = 2;
+int led2 = 7;
+int pin = 2; 
+int pin2 = 3;
 bool boton = false;
-
-void setup() {
+bool boton2 = false;
+void setup()
+{
+  pinMode(pin, INPUT); 
+  pinMode(pin2, INPUT); 
   pinMode(led, OUTPUT);
-  pinMode(pin_boton, INPUT);
+  pinMode(led2, OUTPUT); 
 }
 
-void loop() {
-  if (digitalRead(pin_boton) == LOW && boton == false) {
-    boton = true;
-    digitalWrite(led, HIGH);
+void loop()
+{
+  if (digitalRead(pin) == LOW && boton == true)
+  {
+       boton = false;
+       digitalWrite(led, !digitalRead(led));
+    if(digitalRead(led) == HIGH && digitalRead(led2)== LOW)
+       {
+         digitalWrite(led2, !digitalRead(led2));
+       }
+    else if(digitalRead(led) == LOW && digitalRead(led2)== HIGH)
+       {
+         digitalWrite(led2,digitalRead(led));
+       }
   }
-  if (digitalRead(pin_boton) == HIGH && boton == true) {
-    boton = false;
-    digitalWrite(led, LOW);
+  if(digitalRead(pin)== HIGH && boton == false)
+  {
+       boton = true;
+  }
+  if (digitalRead(pin2) == LOW && boton2 == true)
+  {
+       boton2 = false;
+       digitalWrite(led2, !digitalRead(led2));
+  }
+  if(digitalRead(pin2)== HIGH && boton2 == false)
+  {
+       boton2 = true;
   }
 }
