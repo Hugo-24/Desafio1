@@ -59,8 +59,8 @@ void almacenarDatos(float* datos, int& numDatos) {
 //2.4)
 // Función para calcular la frecuencia
 float calcularAmplitud() {
-  float valorMaximo = -3.402823466e+38; // Menor valor posible para un float
-  float valorMinimo = 3.402823466e+38; // Mayor valor posible para un float
+  float valorMaximo = 3.402823466e+38; // Mayor valor posible para un float
+  float valorMinimo = -3.402823466e+38; // Menor valor posible para un float
 
   for (int i = 0; i < numDatos; i++) {
     if (datos[i] > valorMaximo) {
