@@ -1,0 +1,86 @@
+//2.1)
+// Función para definir los patrones de las ondas
+void definirPatrones() {
+    // Crear estructuras de datos para representar los patrones (por ejemplo, arreglos)
+    // Vamos a usar un arreglo de estructuras para almacenar información como:
+    // - Nombre de la onda
+    // - Valores de referencia para amplitud, frecuencia, pendiente, etc.
+    // - Un arreglo de valores que represente un ciclo completo de la onda
+}
+//2.2)
+// Función para almacenar los datos de amplitud en un arreglo dinámico
+void almacenarDatos(float* datos, int& numDatos) {
+    if (arreglo == nullptr) {
+        cerr << "Error al asignar memoria" << endl;
+        return 1;
+    int capacidad = 10;
+    int elementos = 0;
+    float* arreglo = new float[capacidad];
+    
+    int i = 0;
+    while(true){
+        float valor = generarValor(i);
+        if (numElementos == capacidad){
+            capacidad *= 2;
+            float* nuevoArreglo = new float[capacidad];
+            for (int j = 0; j < numElemntos; j++){
+                nuevoArreglo[j] = arreglo[j];                
+            }
+            delete[] arreglo;
+            arreglo = nuevoArreglo;
+            
+        }
+        
+        arreglo[numElementos] = valor;
+        numElementos++;
+        
+        if(numElementos >= 100) break;
+        
+        i++;
+    }
+    cout << "Datos almacenados: ";
+    for (int i = 0; i < numElementos; i++){
+        cout << arreglo[i] << " ";
+    }
+    cout << endl;
+        
+    delete[] arreglo;
+    
+    return 0;
+}
+    // Leer datos del sensor o simulador
+    // Almacenar los datos en el arreglo dinámico
+}
+//2.3)
+// Función para calcular la frecuencia
+    // Implementar un algoritmo para calcular la frecuencia. Nos puede servir mucho para contar el tiempo la funcion de arduino "millis()".
+    //La funcion millis() es una herramienta para medir el tiempo en el programa. Devuelve el número de milisegundos transcurridos desde que tu placa Arduino inició el programa actual.
+    // Nos puede servir contar las veces que valores coinciden con el eje x.
+//2.4)
+// Función para calcular la frecuencia
+float calcularAmplitud() {
+  float valorMaximo = -3.402823466e+38; // Menor valor posible para un float
+  float valorMinimo = 3.402823466e+38; // Mayor valor posible para un float
+
+  for (int i = 0; i < numDatos; i++) {
+    if (datos[i] > valorMaximo) {
+      valorMaximo = datos[i];
+    }
+    if (datos[i] < valorMinimo) {
+      valorMinimo = datos[i];
+    }
+  }
+
+    //Hacer un return con ambos valores. 
+}
+    // Implementar un algoritmo para calcular la frecuencia
+    // Por ejemplo, usando la transformada de Fourier o contando cruces por cero
+}
+//2.5)
+// Función para identificar la forma de la onda
+    // Comparar los datos medidos con los patrones predefinidos
+    // Calcular la similitud (correlación)
+    // Retornar el nombre de la onda más parecid
+//2.6)
+// Función para imprimir los resultados en pantalla
+    // Utilizar la librería LCD para mostrar los resultados en pantalla
