@@ -1,0 +1,19 @@
+int led = 13;
+int pin_boton = 2;
+bool boton = false;
+
+void setup() {
+  pinMode(led, OUTPUT);
+  pinMode(pin_boton, INPUT);
+}
+
+void loop() {
+  if (digitalRead(pin_boton) == LOW && boton == false) {
+    boton = true;
+    digitalWrite(led, HIGH);
+  }
+  if (digitalRead(pin_boton) == HIGH && boton == true) {
+    boton = false;
+    digitalWrite(led, LOW);
+  }
+}
