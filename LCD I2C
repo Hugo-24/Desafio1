@@ -1,11 +1,11 @@
-#include <LiquidCrystal_I2C.h>
+// C++ code
+//
+#include <Adafruit_LiquidCrystal.h>
 
-// Ajusta la dirección I2C de tu LCD si es diferente
-LiquidCrystal_I2C lcd(0x27, 16, 2);  // Dirección 0x27, 16 columnas, 2 filas
+Adafruit_LiquidCrystal lcd(0);  // Dirección 0x27, 16 columnas, 2 filas
 
 void setup() {
-  lcd.init();                      // Inicializa el LCD
-  lcd.backlight();                 // Enciende la retroiluminación
+  lcd.begin(16,2);                   // Inicializa el LCD              // Enciende la retroiluminación
   lcd.setCursor(0,0);               // Establece el cursor en la posición 0,0
   lcd.print("Hola Mundo");        // Imprime el mensaje
 }
