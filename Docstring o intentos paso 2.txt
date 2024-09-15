@@ -6,6 +6,51 @@ void definirPatrones() {
     // - Nombre de la onda
     // - Valores de referencia para amplitud, frecuencia, pendiente, etc.
     // - Un arreglo de valores que represente un ciclo completo de la onda
+void normalizarMuestras(double* muestras, int numMuestras, double amplitudMax) {
+    for (int i = 0; i < numMuestras; i++) {
+        muestras[i] /= amplitudMax;  // Normalizar con respecto a la amplitud máxima
+    }
+}
+
+// Función para determinar si la señal es senoidal, cuadrada o triangular
+void determinarTipoOnda(double* muestras, int numMuestras) {
+    bool esSenoidal = true;
+    bool esCuadrada = true;
+    bool esTriangular = true;
+
+    for (int i = 1; i < numMuestras; i++) {
+        double diferencia = fabs(muestras[i] - muestras[i - 1]);
+
+        // Onda senoidal: cambios suaves
+        if (diferencia > 0.5) {
+            esSenoidal = false;
+        }
+
+        // Onda cuadrada: cambios abruptos entre niveles alto y bajo
+        if (diferencia < 1.0) {
+            esCuadrada = false;
+        }
+
+        // Onda triangular: cambios constantes entre los valores
+        if (i > 1) {
+            double diferenciaPrev = fabs(muestras[i - 1] - muestras[i - 2]);
+            if (fabs(diferencia - diferenciaPrev) > 0.1) {
+                esTriangular = false;
+            }
+        }
+    }
+
+    // Determinar el tipo de onda
+    if (esSenoidal) {
+        cout << "La función es Senoidal." << endl;
+    } else if (esCuadrada) {
+        cout << "La función es Cuadrada." << endl;
+    } else if (esTriangular) {
+        cout << "La función es Triangular." << endl;
+    } else {
+        cout << "No se pudo determinar el tipo de onda." << endl;
+    }
+}
 }
 //2.2)
 // Función para almacenar los datos de amplitud en un arreglo dinámico
