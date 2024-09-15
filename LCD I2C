@@ -1,0 +1,15 @@
+#include <LiquidCrystal_I2C.h>
+
+// Ajusta la dirección I2C de tu LCD si es diferente
+LiquidCrystal_I2C lcd(0x27, 16, 2);  // Dirección 0x27, 16 columnas, 2 filas
+
+void setup() {
+  lcd.init();                      // Inicializa el LCD
+  lcd.backlight();                 // Enciende la retroiluminación
+  lcd.setCursor(0,0);               // Establece el cursor en la posición 0,0
+  lcd.print("Hola Mundo");        // Imprime el mensaje
+}
+
+void loop() {
+  // No es necesario ningún código en el loop para este ejemplo simple
+}
