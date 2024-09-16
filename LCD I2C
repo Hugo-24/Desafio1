@@ -2,14 +2,19 @@
 //
 #include <Adafruit_LiquidCrystal.h>
 
-Adafruit_LiquidCrystal lcd(0);  // Dirección 0x27, 16 columnas, 2 filas
+Adafruit_LiquidCrystal lcd(0); 
 
 void setup() {
-  lcd.begin(16,2);                   // Inicializa el LCD              // Enciende la retroiluminación
+  lcd.begin(16,2);                   // Inicializa el LCD            
   lcd.setCursor(0,0);               // Establece el cursor en la posición 0,0
-  lcd.print("Hola Mundo");        // Imprime el mensaje
 }
 
 void loop() {
-  // No es necesario ningún código en el loop para este ejemplo simple
+  lcd.setBacklight(1);               // Enciende la retroiluminación
+  lcd.print("Hola Mundo");           // Imprime "Hola Mundo" en la primera fila
+  delay(500);                         // Espera 500 milisegundos
+
+  lcd.setBacklight(0);               // Apaga la retroiluminación
+  lcd.clear();                       // Limpia la pantalla del LCD
+  delay(500);                         // Espera 500 milisegundos
 }
