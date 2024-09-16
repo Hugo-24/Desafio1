@@ -8,7 +8,7 @@ arreglo[i] = analogRead(sensor);
 i +=1;  
 if (i == capacidad-1)
 {
- capacidad += 20;
+ capacidad += 10;
  float* nuevoArreglo = new float[capacidad];
  for (int j = 0; j < i; j++) 
  {
