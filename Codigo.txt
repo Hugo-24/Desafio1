@@ -8,7 +8,10 @@ short int led2 = 7;
 short int pin = 2; //Pin del boton A. 
 short int pin2 = 3; // Pin del boton B. 
 short int sensor = A0;
-float tiempo = 0; //tiempo inicial. 
+float tiempo = 0; //tiempo inicial.
+int i = 0;
+int capacidad = 10;
+float *arreglo = new float[capacidad]; 
 // Estas variables son para mantener algun almacenamiento de cada click en el pulsador. 
 bool boton = false;
 bool boton2 = false;
@@ -43,6 +46,28 @@ void loop(){
 //
 //
 // 
+void almacenarDatos()
+{ 
+arreglo[i] = analogRead(sensor);
+i +=1;  
+if (i == capacidad-1)
+{
+ capacidad += 10;
+ float* nuevoArreglo = new float[capacidad];
+ for (int j = 0; j < i; j++) 
+ {
+ nuevoArreglo[j] = arreglo[j];                
+ }
+ arreglo = nuevoArreglo;
+}
+}
+void imprimirarreglo()
+{
+ for (int k = 0; k < capacidad; k++)
+ {
+   Serial.println(arreglo[k]); 
+ }
+}
 void funcionalidadespulsadores() //Esta funcion es toda la logica de los pulsadores para tomar datos y tomar tiempo, solamente del funcionamiento correcto del circuito. 
 {
   if (digitalRead(pin) == LOW && boton == true) //Por la forma en que esta el circuito (Pulldown) el pin del pulsador siempre va a ser negativo, pero en el instante que se presione, se va a cambiar el bool a true.  
@@ -72,14 +97,15 @@ void funcionalidadespulsadores() //Esta funcion es toda la logica de los pulsado
     boton2 = true;
     medirtiempo = !medirtiempo; //Cuando se presiona el pulsador B, por lo tanto cuando se apaga el led2 y cuando se deja de recolectar datos para procesarlos e imprimirlos, es cuando se mide el tiempo que transcurrio. 
   }
-  if (digitalRead(led) == HIGH)//Si hemos activado el pulsador A, entonces se van a estar imprimiendo en monitor serial los datos que se van a estar generando.
+  if (digitalRead(led) == HIGH && digitalRead(led2)== HIGH)//Si hemos activado el pulsador A, entonces se van a estar imprimiendo en monitor serial los datos que se van a estar generando.
 {
-    Serial.print(analogRead(sensor));
+    almacenarDatos();
+    Serial.println(analogRead(sensor));
   }
   if (digitalRead(led) == HIGH && digitalRead(led2) == HIGH && medirtiempo==true) //Si los leds estan prendidos, quiere decir que estamos recibiendo todavia los datos por lo que no hay que mostrar ni procesar nada aun. 
 {
     lcd.setBacklight(1);
-    lcd.print(analogRead(sensor));
+    lcd.println(analogRead(sensor));
     lcd.clear();
   }
 }
@@ -90,6 +116,7 @@ void Imprimirdatos(){
     lcd.clear();
     //Para pasar el tiempo a segundos porque la funcion millis(), lo mide en milisegundos.
     lcd.print(tiempo/1000);
+    imprimirarreglo();
     medirtiempo = true;
   } 
 }
