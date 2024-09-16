@@ -1,51 +1,89 @@
 // C++ code
-//
+// Incluimos la biblioteca Adafruit_LiquidCrystal para controlar el LCD
+#include <Adafruit_LiquidCrystal.h>
+
+// Creamos un objeto LCD conectado a la dirección I2C 0x27
+Adafruit_LiquidCrystal lcd(0x27);
+
+// Definimos los pines para el LED, el LED2, el botón, el botón2 y el sensor
 int led = 13;
 int led2 = 7;
-int pin = 2; 
+int pin = 2;
 int pin2 = 3;
 int sensor = A0;
+
+// Variables para controlar el estado de los botones
 bool boton = false;
 bool boton2 = false;
-void setup()
-{
-  pinMode(pin, INPUT); 
-  pinMode(pin2, INPUT); 
-  pinMode(led, OUTPUT);
-  pinMode(led2, OUTPUT);
+
+// Función de configuración
+void setup() {
+  // Configuramos los pines como entrada o salida según corresponda
+  pinMode(pin, INPUT); // Pin para el botón 1
+  pinMode(pin2, INPUT); // Pin para el botón 2
+  pinMode(led, OUTPUT); // Pin para el LED 1
+  pinMode(led2, OUTPUT); // Pin para el LED 2
+
+  // Inicializamos la comunicación serial
   Serial.begin(9600);
+
+  // Inicializamos el LCD con 16 columnas y 2 filas
+  lcd.begin(16, 2);
 }
 
-void loop()
-{
-  if (digitalRead(pin) == LOW && boton == true)
-  {
-       boton = false;
-       digitalWrite(led, !digitalRead(led));
-    if(digitalRead(led) == HIGH && digitalRead(led2)== LOW)
-       {
-         digitalWrite(led2, !digitalRead(led2));
-       }
-    else if(digitalRead(led) == LOW && digitalRead(led2)== HIGH)
-       {
-         digitalWrite(led2,digitalRead(led));
-       }
+// Función principal del bucle
+void loop() {
+  // Verificamos si el botón 1 se ha presionado y si está en estado activo
+  if (digitalRead(pin) == LOW && boton == true) {
+    // Desactivamos el botón
+    boton = false;
+
+    // Invertimos el estado del LED 1
+    digitalWrite(led, !digitalRead(led));
+
+    // Si el LED 1 está encendido y el LED 2 está apagado, encendemos el LED 2
+    if (digitalRead(led) == HIGH && digitalRead(led2) == LOW) {
+      digitalWrite(led2, !digitalRead(led2));
+    }
+
+    // Si el LED 1 está apagado y el LED 2 está encendido, apagamos el LED 2
+    else if (digitalRead(led) == LOW && digitalRead(led2) == HIGH) {
+      digitalWrite(led2, digitalRead(led));
+    }
   }
-  if(digitalRead(pin)== HIGH && boton == false)
-  {
-       boton = true;
+
+  // Si el botón 1 se ha soltado y estaba en estado inactivo, lo activamos
+  if (digitalRead(pin) == HIGH && boton == false) {
+    boton = true;
   }
-  if (digitalRead(pin2) == LOW && boton2 == true)
-  {
-       boton2 = false;
-       digitalWrite(led2, !digitalRead(led2));
+
+  // Verificamos si el botón 2 se ha presionado y si está en estado activo
+  if (digitalRead(pin2) == LOW && boton2 == true) {
+    // Desactivamos el botón
+    boton2 = false;
+
+    // Invertimos el estado del LED 2
+    digitalWrite(led2, !digitalRead(led2));
   }
-  if(digitalRead(pin2)== HIGH && boton2 == false && digitalRead(led) == HIGH)
-  {
-       boton2 = true;
+
+  // Si el botón 2 se ha soltado y estaba en estado inactivo, lo activamos si el LED 1 está encendido
+  if (digitalRead(pin2) == HIGH && boton2 == false && digitalRead(led) == HIGH) {
+    boton2 = true;
   }
-  if (digitalRead(led2) == HIGH)
-  {
+
+  // Si el LED 1 está encendido, imprimimos la lectura del sensor en el puerto serial
+  if (digitalRead(led) == HIGH) {
     Serial.print(analogRead(sensor));
+  }
+
+  // Si el LED 2 está encendido, mostramos la lectura del sensor en el LCD
+  if (digitalRead(led2) == HIGH) {
+    // Encendemos la retroiluminación del LCD
+    lcd.setBacklight(1);
+
+    // Imprimimos la lectura del sensor en el LCD
+    lcd.println(analogRead(sensor));
+    // Limpiamos la pantalla del LCD
+    lcd.clear();
   }
 }
