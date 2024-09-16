@@ -2,7 +2,7 @@
 //
 #include <Adafruit_LiquidCrystal.h>
 
-Adafruit_LiquidCrystal lcd(0); 
+Adafruit_LiquidCrystal lcd(0x27); 
 
 void setup() {
   lcd.begin(16,2);                   // Inicializa el LCD            
