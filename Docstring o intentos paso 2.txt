@@ -1,5 +1,8 @@
-//2.1)
+// 2.1)
 // Función para almacenar los datos de amplitud en un arreglo dinámico
+// Esta función genera valores y los almacena en un arreglo dinámico. Si el arreglo se llena, se redimensiona para acomodar más datos. 
+// Al final, imprime los datos almacenados y libera la memoria utilizada.
+
 void almacenarDatos(float* datos, int& numDatos) {
     if (arreglo == nullptr) {
         cerr << "Error al asignar memoria" << endl;
@@ -42,11 +45,11 @@ void almacenarDatos(float* datos, int& numDatos) {
     // Leer datos del sensor o simulador
     // Almacenar los datos en el arreglo dinámico
 }
-//2.2)
+
+// 2.2)
 // Función para calcular la frecuencia y duración de un ciclo usando cruces por cero
-    // Implementar un algoritmo para calcular la frecuencia. Nos puede servir mucho para contar el tiempo la funcion de arduino "millis()".
-    //La funcion millis() es una herramienta para medir el tiempo en el programa. Devuelve el número de milisegundos transcurridos desde que tu placa Arduino inició el programa actual.
-    // Nos puede servir contar las veces que valores coinciden con el eje x.
+// Esta función cuenta los cruces por cero en las muestras para estimar la frecuencia de la señal. 
+// Utiliza el número total de muestras y el tiempo total para calcular la frecuencia y la duración de un ciclo completo.
 
 void calcularFrecuenciaYCiclos(double* muestras, int numMuestras, double tiempoTotal) {
     int crucesPorCero = 0;
@@ -75,8 +78,11 @@ void calcularFrecuenciaYCiclos(double* muestras, int numMuestras, double tiempoT
 }
 
 
-//2.3)
-// Función para calcular los valores maximos y minimos de la amplitud
+// 2.3)
+// Función para calcular los valores máximos y mínimos de la amplitud
+// Esta función recorre los datos para encontrar los valores máximo y mínimo de la amplitud. 
+// Los valores máximo y mínimo se retornan por referencia para su posterior uso.
+
 float calcularAmplitud() {
   float valorMaximo = 3.402823466e+38; // Mayor valor posible para un float
   float valorMinimo = -3.402823466e+38; // Menor valor posible para un float
@@ -95,8 +101,12 @@ float calcularAmplitud() {
     // Implementar un algoritmo para calcular la frecuencia
     // Por ejemplo, usando la transformada de Fourier o contando cruces por cero
 }
-//2.4)
-// Función para identificar la forma de la onda y para definir los patrones de las ondas
+
+// 2.4)
+// Función para identificar la forma de la onda y definir los patrones de las ondas
+// Esta función determina si la señal es senoidal, cuadrada o triangular basándose en el patrón de cambios en las muestras. 
+// Los datos son normalizados en función de la amplitud máxima antes de la identificación de la forma de la onda.
+
 void definirPatrones() {
     // Crear estructuras de datos para representar los patrones (por ejemplo, arreglos)
     // Vamos a usar un arreglo de estructuras para almacenar información como:
