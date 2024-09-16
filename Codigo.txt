@@ -1,89 +1,95 @@
-// C++ code
-// Incluimos la biblioteca Adafruit_LiquidCrystal para controlar el LCD
-#include <Adafruit_LiquidCrystal.h>
-
-// Creamos un objeto LCD conectado a la dirección I2C 0x27
-Adafruit_LiquidCrystal lcd(0x27);
-
-// Definimos los pines para el LED, el LED2, el botón, el botón2 y el sensor
-int led = 13;
-int led2 = 7;
-int pin = 2;
-int pin2 = 3;
-int sensor = A0;
-
-// Variables para controlar el estado de los botones
+//Este programa no sirve si se llegan a mantener presionados los pulsadores. 
+//Los dos pulsadores requeridos son los A y B, conectados en los pines pin y pin2 respectivamente. 
+#include <Adafruit_LiquidCrystal.h>  // Incluimos la biblioteca Adafruit_LiquidCrystal para poder imprimir en el LCD I2C.
+Adafruit_LiquidCrystal lcd(0x27); //Se define el LCD. 
+// Se definen los pines. 
+short int led = 13;
+short int led2 = 7;
+short int pin = 2; //Pin del boton A. 
+short int pin2 = 3; // Pin del boton B. 
+short int sensor = A0;
+float tiempo = 0; //tiempo inicial. 
+// Estas variables son para mantener algun almacenamiento de cada click en el pulsador. 
 bool boton = false;
 bool boton2 = false;
-
-// Función de configuración
+bool medirtiempo = false; //Esta variable es para poder establecer una condicion para poder calcular el tiempo una sola vez en el momento exacto en que se pida. 
 void setup() {
-  // Configuramos los pines como entrada o salida según corresponda
   pinMode(pin, INPUT); // Pin para el botón 1
   pinMode(pin2, INPUT); // Pin para el botón 2
   pinMode(led, OUTPUT); // Pin para el LED 1
   pinMode(led2, OUTPUT); // Pin para el LED 2
-
-  // Inicializamos la comunicación serial
-  Serial.begin(9600);
-
-  // Inicializamos el LCD con 16 columnas y 2 filas
-  lcd.begin(16, 2);
+  Serial.begin(9600); //Se inicializa la comunicacion con el pc.(Serial). 
+  lcd.begin(16, 2); //Se inicializa el LCD
+// Incluimos la biblioteca Adafruit_LiquidCrystal para poder imprimir en el LCD I2C.
 }
-
-// Función principal del bucle
-void loop() {
-  // Verificamos si el botón 1 se ha presionado y si está en estado activo
-  if (digitalRead(pin) == LOW && boton == true) {
-    // Desactivamos el botón
-    boton = false;
-
-    // Invertimos el estado del LED 1
-    digitalWrite(led, !digitalRead(led));
-
-    // Si el LED 1 está encendido y el LED 2 está apagado, encendemos el LED 2
-    if (digitalRead(led) == HIGH && digitalRead(led2) == LOW) {
-      digitalWrite(led2, !digitalRead(led2));
+//
+//
+//
+//
+//
+//
+//
+//
+//Programa principal.
+void loop(){
+  funcionalidadespulsadores();
+  Imprimirdatos();
+}
+//
+//
+//
+//
+//
+//
+//
+// 
+void funcionalidadespulsadores() //Esta funcion es toda la logica de los pulsadores para tomar datos y tomar tiempo, solamente del funcionamiento correcto del circuito. 
+{
+  if (digitalRead(pin) == LOW && boton == true) //Por la forma en que esta el circuito (Pulldown) el pin del pulsador siempre va a ser negativo, pero en el instante que se presione, se va a cambiar el bool a true.  
+  {
+    boton = false; //Para que se vuelva a cambiar en caso que se presione otra vez el pulsador A. 
+    digitalWrite(led, !digitalRead(led)); //Si se presiona el pulsador, se cambia el estado del led, si estaba prendido se apaga y si estaba apagado se prende. 
+    tiempo = millis()- tiempo; //Esto es para no tener en cuenta el tiempo en el que no se estaban recolectando datos para procesar. 
+    if (digitalRead(led) == HIGH && digitalRead(led2) == LOW) { //Esto es para prender ambos leds si se prende el primero solo cuando se presiona el pulsador A. 
+      digitalWrite(led2, digitalRead(led));
     }
-
-    // Si el LED 1 está apagado y el LED 2 está encendido, apagamos el LED 2
-    else if (digitalRead(led) == LOW && digitalRead(led2) == HIGH) {
+    else if (digitalRead(led) == LOW && digitalRead(led2) == HIGH) { //Esto es para apagar ambos leds si se apaga el primero al presionar el pulsador A. 
       digitalWrite(led2, digitalRead(led));
     }
   }
-
-  // Si el botón 1 se ha soltado y estaba en estado inactivo, lo activamos
-  if (digitalRead(pin) == HIGH && boton == false) {
+  if (digitalRead(pin) == HIGH && boton == false) { //Esto pa almacenar que se presiono el pulsador y decirle al siguiente ciclo que prenda o apague porque se presiono el pulsador. 
     boton = true;
+    medirtiempo = true; //Para que nunca se muestre o halle el tiempo cuando se presiona el boton A. 
   }
 
-  // Verificamos si el botón 2 se ha presionado y si está en estado activo
-  if (digitalRead(pin2) == LOW && boton2 == true) {
-    // Desactivamos el botón
+  if (digitalRead(pin2) == LOW && boton2 == true) { //Esto es unicamente para prender el led2
     boton2 = false;
-
-    // Invertimos el estado del LED 2
-    digitalWrite(led2, !digitalRead(led2));
+    tiempo = millis(); //Para restar luego y obtener unicamente el tiempo que transcurre mientras se recolectan los datos.
+    digitalWrite(led2,!digitalRead(led2)); //Se pasa de apagado a encendido al led. 
   }
-
-  // Si el botón 2 se ha soltado y estaba en estado inactivo, lo activamos si el LED 1 está encendido
-  if (digitalRead(pin2) == HIGH && boton2 == false && digitalRead(led) == HIGH) {
+  if (digitalRead(pin2) == HIGH && boton2 == false && digitalRead(led) == HIGH) //Aca es donde se almacena la presionada del pulsador B, se pone el boton2 en true. 
+{
     boton2 = true;
+    medirtiempo = !medirtiempo; //Cuando se presiona el pulsador B, por lo tanto cuando se apaga el led2 y cuando se deja de recolectar datos para procesarlos e imprimirlos, es cuando se mide el tiempo que transcurrio. 
   }
-
-  // Si el LED 1 está encendido, imprimimos la lectura del sensor en el puerto serial
-  if (digitalRead(led) == HIGH) {
+  if (digitalRead(led) == HIGH)//Si hemos activado el pulsador A, entonces se van a estar imprimiendo en monitor serial los datos que se van a estar generando.
+{
     Serial.print(analogRead(sensor));
   }
-
-  // Si el LED 2 está encendido, mostramos la lectura del sensor en el LCD
-  if (digitalRead(led2) == HIGH) {
-    // Encendemos la retroiluminación del LCD
+  if (digitalRead(led) == HIGH && digitalRead(led2) == HIGH && medirtiempo==true) //Si los leds estan prendidos, quiere decir que estamos recibiendo todavia los datos por lo que no hay que mostrar ni procesar nada aun. 
+{
     lcd.setBacklight(1);
-
-    // Imprimimos la lectura del sensor en el LCD
-    lcd.println(analogRead(sensor));
-    // Limpiamos la pantalla del LCD
+    lcd.print(analogRead(sensor));
     lcd.clear();
   }
+}
+void Imprimirdatos(){
+ if (digitalRead(led) == HIGH && medirtiempo == false)
+  {
+    tiempo = millis()- tiempo; //Se resta el tiempo anterior que es cuando se presiona el pulsador para empezar a recolectar datos y poder tener unicamente el tiempo de recoleccion que es el que nos interesa.
+    lcd.clear();
+    //Para pasar el tiempo a segundos porque la funcion millis(), lo mide en milisegundos.
+    lcd.print(tiempo/1000);
+    medirtiempo = true;
+  } 
 }
