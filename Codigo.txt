@@ -10,11 +10,13 @@ short int pin2 = 3; // Pin del boton B.
 short int sensor = A0;
 unsigned int tiempo = 0; //tiempo inicial.
 unsigned int seconds = 0;
-int capacidad = 10; 
+int capacidad = 200; 
 float *arreglo = new float[capacidad];
-int capacidadaux = 10; 
-float *arregloaux = new float[capacidadaux];
-int x = 0;
+char tipoonda[11] = "";
+int cantidatos = 0;
+float amplitudmax =  0;
+float amplitudmin =  0;
+int x = 0; 
 // Estas variables son para mantener algun almacenamiento de cada click en el pulsador. 
 bool boton = false;
 bool boton2 = false;
@@ -45,33 +47,38 @@ void loop(){
 //
   if (digitalRead(led) == HIGH && digitalRead(led2)== HIGH)
   {
-;
-arregloaux[x] = analogRead(sensor);
-x +=1;  
-if (x == capacidad-1)
-{
- capacidadaux += 10;
- float* nuevoArreglo = new float[capacidadaux];
- for (int a = 0; a < a; a++) 
- {
- nuevoArreglo[a] = arregloaux[a];                
- }
- arregloaux = nuevoArreglo;
-}
-  }
+   arreglo[x] = analogRead(sensor);
+   cantidatos += 1;  
+   x +=1;  
+   if (x == capacidad-1)
+    {   
+    Serial.println("Procesar datos2");
+    Serial.println(cantidatos);
+    Serial.println(x);
+    delete[] arreglo; 
+    x = 0; 
+    }
+  }  
+
 //
   if (digitalRead(led2)== HIGH)
   {
     algo = true;
     if (digitalRead(led) == HIGH && (currentseconds - seconds >= (1000)))
     {
-     Serial.println("Hola");
+     Serial.println("Procesar datos");
+     //imprimirarreglo();
+     x = 0;
+     delete[] arreglo; 
      seconds = currentseconds;
     }
   }
   else if (digitalRead(led) == HIGH && algo == true)
   {
-   Serial.println("Hola2");
+   Serial.println("Datos procesados, imprimir en LCD");
+   Serial.print("Cantidad de datos");
+   Serial.println(cantidatos);
+    cantidatos = 0;
     algo = false;
   }
 }
@@ -130,7 +137,14 @@ void Imprimirdatos(){
     tiempo = millis()- tiempo; //Se resta el tiempo anterior que es cuando se presiona el pulsador para empezar a recolectar datos y poder tener unicamente el tiempo de recoleccion que es el que nos interesa.
     lcd.clear();
     //Para pasar el tiempo a segundos porque la funcion millis(), lo mide en milisegundos.
-    //lcd.print(tiempo/1000);
+    lcd.print(tiempo/1000);
     medirtiempo = true;
   } 
+}
+void imprimirarreglo()
+{
+ for (int k = 0; k < capacidad; k++)
+ {
+   Serial.println(arreglo[k]); 
+ }
 }
