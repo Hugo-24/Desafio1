@@ -8,12 +8,12 @@ short int led2 = 7;
 short int pin = 2; //Pin del boton A. 
 short int pin2 = 3; // Pin del boton B. 
 short int sensor = A0;
-unsigned int tiempo = 0; //tiempo inicial.
+float tiempo = 0; //tiempo inicial.
 unsigned int seconds = 0;
 int capacidad = 200; 
 float *arreglo = new float[capacidad];
 char tipoonda[11] = "";
-int cantidatos = 0;
+unsigned int cantidatos = 0;
 float amplitudmax =  0;
 float amplitudmin =  0;
 int x = 0; 
@@ -42,7 +42,7 @@ void setup() {
 //Programa principal.
 void loop(){
   funcionalidadespulsadores();
-  Imprimirdatos();
+  tiempoejecucion();
   unsigned int currentseconds = millis();
 //
   if (digitalRead(led) == HIGH && digitalRead(led2)== HIGH)
@@ -55,7 +55,8 @@ void loop(){
     Serial.println("Procesar datos2");
     Serial.println(cantidatos);
     Serial.println(x);
-    delete[] arreglo; 
+    delete[] arreglo;
+    arreglo = new float[capacidad];
     x = 0; 
     }
   }  
@@ -70,15 +71,19 @@ void loop(){
      //imprimirarreglo();
      x = 0;
      delete[] arreglo; 
+     arreglo = new float[capacidad];
      seconds = currentseconds;
     }
   }
   else if (digitalRead(led) == HIGH && algo == true)
   {
    Serial.println("Datos procesados, imprimir en LCD");
-   Serial.print("Cantidad de datos");
+   Serial.print("Cantidad de datos procesados: ");
    Serial.println(cantidatos);
-    cantidatos = 0;
+   x = 0;
+   delete[] arreglo; 
+   arreglo = new float[capacidad];
+   cantidatos = 0;
     algo = false;
   }
 }
@@ -131,13 +136,15 @@ void funcionalidadespulsadores() //Esta funcion es toda la logica de los pulsado
     lcd.clear();
   }
 }
-void Imprimirdatos(){
+void tiempoejecucion(){
  if (digitalRead(led) == HIGH && medirtiempo == false)
   {
     tiempo = millis()- tiempo; //Se resta el tiempo anterior que es cuando se presiona el pulsador para empezar a recolectar datos y poder tener unicamente el tiempo de recoleccion que es el que nos interesa.
+    float tiempos = tiempo/1000; //Tiempo en segundos. 
     lcd.clear();
+    Serial.print("Tiempo: ");
+    Serial.println(tiempos);
     //Para pasar el tiempo a segundos porque la funcion millis(), lo mide en milisegundos.
-    lcd.print(tiempo/1000);
     medirtiempo = true;
   } 
 }
