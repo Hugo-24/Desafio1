@@ -13,12 +13,13 @@ unsigned int seconds = 0;
 int capacidad = 200; 
 float *arreglo = new float[capacidad];
 unsigned int cantidatos = 0;
-float amplitudmax =  -10000;//Esto es como pa que el programa reconozca que si estan creadas estas variables.
-float amplitudmin =  10000;
+int amplitudmax = 0;//Esto es como pa que el programa reconozca que si estan creadas estas variables.
+int amplitudmin = 0;
 int x = 0; 
 float ciclos = 0; 
 float frecuencia = 0; 
 float tiempos = 0;
+bool reiniciaramplitud = true;//Esto es para que unicamente en el primer ciclo, ambas amplitudes tomen el valor del primer dato recibido.
 // Estas variables son para mantener algun almacenamiento de cada click en el pulsador. 
 bool boton = false;
 bool boton2 = false;
@@ -58,8 +59,6 @@ void funcionalidadespulsadores() //Esta funcion es toda la logica de los pulsado
     tiempo = millis(); //Para restar luego y obtener unicamente el tiempo que transcurre mientras se recolectan los datos.
     seconds = tiempo;
     digitalWrite(led2,!digitalRead(led2)); //Se pasa de apagado a encendido al led.
-    float amplitudmax = analogRead(sensor);
-    float amplitudmin = analogRead(sensor);
   }
   if (digitalRead(pin2) == HIGH && boton2 == false && digitalRead(led) == HIGH) //Aca es donde se almacena la presionada del pulsador B, se pone el boton2 en true. 
 {
@@ -87,52 +86,29 @@ void tiempoejecucion(){
     medirtiempo = true;
   } 
 }
-char* identificaronda(float* arreglo, int capacidad, float amplitudmax, float amplitudmin) {
-  // Inicializar variables para almacenar características
-  int numPicos = 0;
-  bool subiendo = true;
-
-  // Umbrales para determinar si un valor es un pico o un valle
-  float umbralPico = 0.9 * amplitudmax;
-  float umbralValle = 0.1 * amplitudmin;
-
-  // Contar el número de picos y valles
-  for (int i = 1; i < capacidad - 1; i++) {
-    if (subiendo && arreglo[i] > umbralPico) {
-      numPicos++;
-      subiendo = false;
-    } else if (!subiendo && arreglo[i] < umbralValle) {
-      numPicos++;
-      subiendo = true;
+void identificaronda(float* arreglo, int capacidad, float amplitudmax, float amplitudmin) 
+{ 
+  bool cuadrada = false;
+  for(int i = 0; i < 3; i++)
+  {
+    if (arreglo[i] == amplitudmax || arreglo[i] == amplitudmin)
+    {
+      cuadrada = true; 
+    }
+    else
+    {
+      cuadrada = false;
+      break;
     }
   }
-
-  // Clasificar la onda según el número de picos y otras características
-  char* tipos[] = {"Constante", "Triangular", "Cuadrada", "Senoidal"};
-  int indiceTipo = 0;
-
-  if (numPicos == 0) { // Onda constante
-    indiceTipo = 0;
-  } else if (numPicos == 2) { // Probablemente triangular o cuadrada
-    // Calcular la variación media entre muestras consecutivas
-    float variacionMedia = 0;
-    for (int i = 1; i < capacidad; i++) {
-      variacionMedia += abs(arreglo[i] - arreglo[i - 1]);
-    }
-    variacionMedia /= (capacidad - 1);
-
-    // Si la variación es alta, probablemente sea cuadrada
-    if (variacionMedia > (amplitudmax - amplitudmin) / 4) {
-      indiceTipo = 2;
-    } else {
-      indiceTipo = 1; // Triangular
-    }
-  } else { // Más de 2 picos, probablemente sinusoidal
-    indiceTipo = 3;
+  if (cuadrada == true)
+  {
+    Serial.println("La onda es cuadrada");
   }
-
-  Serial.print("Tipo de onda: ");
-  Serial.println(tipos[indiceTipo]);
+  else if (cuadrada == false)
+  {
+   Serial.println("La onda no es cuadrada");
+  }
 }
 void imprimirarreglo()
 {
@@ -182,13 +158,19 @@ float calcularciclos(float* arreglo, int capacidad, float amplitudmax, float amp
 //
 //Programa principal.
 void loop()
-{
+{ 
   funcionalidadespulsadores();
   tiempoejecucion();
   unsigned int currentseconds = millis();
 //
   if (digitalRead(led) == HIGH && digitalRead(led2)== HIGH)
   {
+   if (reiniciaramplitud == true)
+     {
+       amplitudmax = analogRead(sensor);
+       amplitudmin = analogRead(sensor);
+       reiniciaramplitud = false;
+     } 
    arreglo[x] = analogRead(sensor);
    cantidatos += 1;  
    x +=1;  
@@ -211,8 +193,8 @@ void loop()
     {
      Serial.println("Procesar datos");
      //imprimirarreglo();
-     identificaronda(arreglo,capacidad,amplitudmax,amplitudmin);
      amplitud(arreglo,capacidad);
+     identificaronda(arreglo,capacidad,amplitudmax,amplitudmin);
      x = 0;
      ciclos = ciclos  + calcularciclos(arreglo,capacidad,amplitudmax,amplitudmin);
      delete[] arreglo; 
@@ -223,6 +205,7 @@ void loop()
   else if (digitalRead(led) == HIGH && algo == true)
   {
    frecuencia = ciclos/tiempos;
+   identificaronda(arreglo,capacidad,amplitudmax,amplitudmin);
    Serial.println("Datos procesados, imprimir en LCD");
    Serial.print("Cantidad de datos procesados: ");
    Serial.println(cantidatos);
@@ -241,6 +224,7 @@ void loop()
    arreglo = new float[capacidad];
    cantidatos = 0;
    ciclos = 0;
+   reiniciaramplitud = true;
    algo = false;
   }
 }
