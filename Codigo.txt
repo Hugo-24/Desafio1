@@ -18,6 +18,7 @@ float amplitudmin = 10000;
 float amplitudmaxactual = -10000;//Son los valores de amplitud que van a tomarse cada vez que se procesan los datos. 
 float amplitudminactual = 10000;
 int x = 0; 
+float Amplitud = 0;
 float ciclos = 0; 
 float frecuencia = 0; 
 float tiempos = 0;
@@ -179,7 +180,7 @@ float calcularciclos(float* arreglo, int capacidad, float amplitudmax, float amp
       subiendo = true;
     }
   }
-  return num_ciclos;
+  return num_ciclos/2;
 }
 void reeestableceramplitudes()
 {
@@ -199,6 +200,87 @@ void reeestableceramplitudesactuales()
 {
  amplitudmaxactual = -10000;
        amplitudminactual = 10000;
+}
+void imprimircosasenelserial()
+{
+ Serial.println("Datos procesados, imprimir en LCD");
+   Serial.print("Cantidad de datos procesados: ");
+   Serial.println(cantidatos);
+   Serial.print("Tiempo: ");
+   Serial.println(tiempos);
+   Serial.print("Ciclos: ");
+   Serial.println(ciclos);
+   Serial.print("Frecuencia: ");
+   Serial.println(frecuencia);
+   Serial.print("La amplitud es: ");
+   Serial.println(Amplitud);
+   Serial.print("Valor maximo: ");
+   Serial.println(amplitudmax);
+   Serial.print("Valor minimo: ");
+   Serial.println(amplitudmin); 
+}
+void imprimircuadrada()
+{
+   lcd.setCursor(0, 0);
+    lcd.print("La onda es: ");
+    lcd.setCursor(0,1);
+    lcd.print("Cuadrada");
+    delay(500);
+    lcd.clear();
+}
+void imprimirtriangular()
+{
+  lcd.setCursor(0, 0);
+    lcd.print("La onda es: ");
+    lcd.setCursor(0,1);
+    lcd.print("Triangular");
+    delay(500);
+    lcd.clear();
+}
+void imprimirenlcd()
+{
+   lcd.setCursor(0, 0);
+   lcd.print("Datos procesados: ");
+   lcd.setCursor(0,1);
+   lcd.print(cantidatos);
+   delay(500);
+   lcd.clear();  
+   lcd.setCursor(0, 0);
+   lcd.print("Tiempo: ");
+   lcd.setCursor(0,1);
+   lcd.print(tiempos);
+   delay(500);
+   lcd.clear(); 
+   lcd.setCursor(0, 0);
+   lcd.print("Ciclos: ");
+   lcd.setCursor(0,1);
+   lcd.print(ciclos);
+   delay(500);
+   lcd.clear(); 
+   lcd.setCursor(0, 0);
+   lcd.print("Frecuencia: ");
+   lcd.setCursor(0,1);
+   lcd.print(frecuencia);
+   delay(500);
+   lcd.clear(); 
+   lcd.setCursor(0, 0);
+   lcd.print("La amplitud es: ");
+   lcd.setCursor(0,1);
+   lcd.print(Amplitud);
+   delay(500);
+   lcd.clear();
+   lcd.setCursor(0, 0);
+   lcd.print("Valor maximo: ");
+   lcd.setCursor(0,1);
+   lcd.print(amplitudmax);
+   delay(500);
+   lcd.clear();
+   lcd.setCursor(0, 0);
+   lcd.print("Valor minimo: ");
+   lcd.setCursor(0,1);
+   lcd.print(amplitudmin);
+   delay(500);
+   lcd.clear();  
 }
 //
 //
@@ -225,9 +307,6 @@ void loop()
    x++;  
    if (x == capacidad-1)//Esta condicion es en caso que se llegue a llenar el arreglo antes que pase el segundo para que se procesen los datos. 
     {   
-    Serial.println("Procesar datos2");
-    Serial.println(cantidatos);
-    Serial.println(x);
     reeestableceramplitudesactuales();
     amplitud(arreglo,capacidad);
     ciclos = ciclos  + calcularciclos(arreglo,capacidad,amplitudmaxactual,amplitudminactual);
@@ -257,29 +336,23 @@ void loop()
   {
    reeestableceramplitudesactuales();
    amplitud(arreglo,capacidad);
+   Amplitud = (amplitudmax-amplitudmin)/2;
    ciclos = ciclos  + calcularciclos(arreglo,capacidad,amplitudmaxactual,amplitudminactual);
    frecuencia = ciclos/tiempos;
    identificaronda(arreglo,capacidad,amplitudmaxactual,amplitudminactual);
-   Serial.println("Datos procesados, imprimir en LCD");
-   Serial.print("Cantidad de datos procesados: ");
-   Serial.println(cantidatos);
-   Serial.print("Tiempo: ");
-   Serial.println(tiempos);
-   Serial.print("Ciclos: ");
-   Serial.println(ciclos);
-   Serial.print("Frecuencia: ");
-   Serial.println(frecuencia);
-   Serial.print("Valor maximo: ");
-   Serial.println(amplitudmax);
-   Serial.print("Valor minimo: ");
-   Serial.println(amplitudmin);
-   Serial.print("Triangular: ");
-   Serial.println(canttriangular);
-   Serial.print("Senoidal: ");
-   Serial.println(cantsenoidal);
-   Serial.print("Cuadrada ");
-   Serial.println(cantcuadrada);
+   imprimircosasenelserial();
+   imprimirenlcd();
+   
+   if (cantcuadrada > cantsenoidal && cantcuadrada > canttriangular)
+   {
+   imprimircuadrada();
+   }
+   else
+   {
+   imprimirtriangular();
+   }
    x = 0;
+   Amplitud = 0;
    delete[] arreglo; 
    arreglo = new float[capacidad];
    cantidatos = 0;
@@ -287,6 +360,11 @@ void loop()
    canttriangular = 0;
    cantsenoidal = 0; 
    cantcuadrada = 0;
+   reiniciaramplitud = true;
+   algo = false;
+  }
+}
+
    reiniciaramplitud = true;
    algo = false;
   }
