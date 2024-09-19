@@ -23,6 +23,7 @@ float frecuencia = 0;
 float tiempos = 0;
 int canttriangular = 0;
 int cantsenoidal = 0; 
+int cantcuadrada = 0;
 bool reiniciaramplitud = true;//Esto es para que unicamente en el primer ciclo, ambas amplitudes tomen el valor del primer dato recibido.
 // Estas variables son para mantener algun almacenamiento de cada click en el pulsador. 
 bool boton = false;
@@ -90,62 +91,45 @@ void tiempoejecucion(){
     medirtiempo = true;
   } 
 }
-void identificaronda(float* arreglo, int capacidad, float amplitudmax, float amplitudmin) 
-{ 
+void identificaronda(float* arreglo, int capacidad, float amplitudmaxactual, float amplitudminactual) {
   bool cuadrada = false;
-  bool triangular = false;
+  bool triangular = true;
   int indicemax = 0;
-  int indicemin = 0; 
-  for(int i = 0; i < 3; i++)
-  {
-    if (arreglo[i] == amplitudmaxactual || arreglo[i] == amplitudminactual || arreglo[i] == 10000 || arreglo[i] == -10000 ||  arreglo[i] == 0)
-    {
+  int indicemin = 0;
+
+  // Detección de onda cuadrada (sin cambios)
+  for(int i = 0; i < 3; i++) {
+    if (arreglo[i] == amplitudmaxactual || arreglo[i] == amplitudminactual || arreglo[i] == 10000 || arreglo[i] == -10000 || arreglo[i] == 0) {
       cuadrada = true; 
-    }
-    else
-    {
+    } else {
       cuadrada = false;
       break;
     }
   }
-  if (cuadrada == true)
+
+  if (cuadrada == true) 
   {
+    cantcuadrada++;
     Serial.println("La onda es cuadrada");
-  }
-  else if (cuadrada == false)
-  {
-    for (int i = 0; i < capacidad; i++)
+  } 
+  else 
     {
-     //arreglo[i] = (arreglo[i] - amplitudmin) / (amplitudmax - amplitudmin) * 2 - 1;//Pa normalizar el arreglo.
-     if (arreglo[i] == amplitudmax)
-     {
-       indicemax = i;
-     }
-     else if (arreglo[i] == amplitudmin)
-     {
-       indicemin = i; 
-     }
+    for (int i = 0; i < capacidad; i++) 
+    {
+      if (arreglo[i] == amplitudmaxactual) {
+        indicemax = i;
+      } else if (arreglo[i] == amplitudminactual) {
+        indicemin = i;
+      }
     }
-  }
-  int ventana = 10; // Ajustar el tamaño de la ventana
-  float pendiente_izq = (arreglo[indicemax] - arreglo[indicemax - ventana]) / ventana;
-  float pendiente_der = (arreglo[indicemin + ventana] - arreglo[indicemin]) / ventana;
-  float umbral = 0.1; // Ajustar el umbral según sea necesario
-
-  if (abs(pendiente_izq - pendiente_der) < umbral) {
-    triangular = true;
-  }
-
-  if (triangular == true) {
-    Serial.println("La onda es triangular");
-    canttriangular++;
-    triangular = false;
-  } else if (cuadrada == true) {
-    Serial.println("La onda es cuadrada");
-  } else {
-    cuadrada = false;
-    Serial.println("La onda es sinusoidal");
-    cantsenoidal++;
+    if (triangular == true) {
+      Serial.println("La onda es triangular");
+      canttriangular++;
+    } else
+      {
+      Serial.println("La onda es sinusoidal");
+      cantsenoidal++;
+    }
   }
 }
 void imprimirarreglo()
@@ -169,17 +153,16 @@ void amplitud(float*arreglo,int capacidad)
       {
       amplitudminactual = arreglo[i];
       }
-    }
-    if (amplitudmaxactual >= amplitudmax)
+      if (arreglo[i] >= amplitudmax)
       {
-      amplitudmax = amplitudmaxactual;
+      amplitudmax = arreglo[i];
       } 
-     else if (amplitudminactual < amplitudmin)
+      else if (arreglo[i] < amplitudmin)
       {
-      amplitudmin = amplitudminactual;
+      amplitudmin = arreglo[i];
       }
+    }
    }
-    
 }
 float calcularciclos(float* arreglo, int capacidad, float amplitudmax, float amplitudmin) {
   int num_ciclos = 0;
@@ -247,8 +230,8 @@ void loop()
     Serial.println(x);
     reeestableceramplitudesactuales();
     amplitud(arreglo,capacidad);
-    ciclos = ciclos  + calcularciclos(arreglo,capacidad,amplitudmax,amplitudmin);
-    identificaronda(arreglo,capacidad,amplitudmax,amplitudmin);
+    ciclos = ciclos  + calcularciclos(arreglo,capacidad,amplitudmaxactual,amplitudminactual);
+    identificaronda(arreglo,capacidad,amplitudmaxactual,amplitudminactual);
     delete[] arreglo;
     arreglo = new float[capacidad];
     x = 0; 
@@ -262,12 +245,8 @@ void loop()
      Serial.println("Procesar datos");
      reeestableceramplitudesactuales();
      amplitud(arreglo,capacidad);
-     Serial.print("Valor maximo actual: ");
-     Serial.println(amplitudmaxactual);
-     Serial.print("Valor minimo actual: ");
-     Serial.println(amplitudminactual);
-     ciclos = ciclos  + calcularciclos(arreglo,capacidad,amplitudmax,amplitudmin);
-     identificaronda(arreglo,capacidad,amplitudmax,amplitudmin);
+     ciclos = ciclos  + calcularciclos(arreglo,capacidad,amplitudmaxactual,amplitudminactual);
+     identificaronda(arreglo,capacidad,amplitudmaxactual,amplitudminactual);
      x = 0;
      delete[] arreglo; 
      arreglo = new float[capacidad];
@@ -278,8 +257,9 @@ void loop()
   {
    reeestableceramplitudesactuales();
    amplitud(arreglo,capacidad);
+   ciclos = ciclos  + calcularciclos(arreglo,capacidad,amplitudmaxactual,amplitudminactual);
    frecuencia = ciclos/tiempos;
-   identificaronda(arreglo,capacidad,amplitudmax,amplitudmin);
+   identificaronda(arreglo,capacidad,amplitudmaxactual,amplitudminactual);
    Serial.println("Datos procesados, imprimir en LCD");
    Serial.print("Cantidad de datos procesados: ");
    Serial.println(cantidatos);
@@ -293,10 +273,12 @@ void loop()
    Serial.println(amplitudmax);
    Serial.print("Valor minimo: ");
    Serial.println(amplitudmin);
-   Serial.println("Triangular: ");
+   Serial.print("Triangular: ");
    Serial.println(canttriangular);
-   Serial.println("Senoidal: ");
+   Serial.print("Senoidal: ");
    Serial.println(cantsenoidal);
+   Serial.print("Cuadrada ");
+   Serial.println(cantcuadrada);
    x = 0;
    delete[] arreglo; 
    arreglo = new float[capacidad];
@@ -304,8 +286,8 @@ void loop()
    ciclos = 0;
    canttriangular = 0;
    cantsenoidal = 0; 
+   cantcuadrada = 0;
    reiniciaramplitud = true;
    algo = false;
   }
 }
-
