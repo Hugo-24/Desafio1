@@ -1,0 +1,371 @@
+//Este programa no sirve si se llegan a mantener presionados los pulsadores. 
+//Los dos pulsadores requeridos son los A y B, conectados en los pines pin y pin2 respectivamente. 
+#include <Adafruit_LiquidCrystal.h>  // Incluimos la biblioteca Adafruit_LiquidCrystal para poder imprimir en el LCD I2C.
+Adafruit_LiquidCrystal lcd(0x27); //Se define el LCD. 
+// Se definen los pines. 
+short int led = 13;
+short int led2 = 7;
+short int pin = 2; //Pin del boton A. 
+short int pin2 = 3; // Pin del boton B. 
+short int sensor = A0;
+float tiempo = 0; //tiempo inicial.
+unsigned int seconds = 0;
+int capacidad = 100; 
+float *arreglo = new float[capacidad];
+unsigned int cantidatos = 0;
+float amplitudmax = -10000;//Esto es como pa que el programa reconozca que si estan creadas estas variables.
+float amplitudmin = 10000;
+float amplitudmaxactual = -10000;//Son los valores de amplitud que van a tomarse cada vez que se procesan los datos. 
+float amplitudminactual = 10000;
+int x = 0; 
+float Amplitud = 0;
+float ciclos = 0; 
+float frecuencia = 0; 
+float tiempos = 0;
+int canttriangular = 0;
+int cantsenoidal = 0; 
+int cantcuadrada = 0;
+bool reiniciaramplitud = true;//Esto es para que unicamente en el primer ciclo, ambas amplitudes tomen el valor del primer dato recibido.
+// Estas variables son para mantener algun almacenamiento de cada click en el pulsador. 
+bool boton = false;
+bool boton2 = false;
+bool algo = true;
+bool medirtiempo = false; //Esta variable es para poder establecer una condicion para poder calcular el tiempo una sola vez en el momento exacto en que se pida. 
+void setup() {
+  pinMode(pin, INPUT); // Pin para el botón 1
+  pinMode(pin2, INPUT); // Pin para el botón 2
+  pinMode(led, OUTPUT); // Pin para el LED 1
+  pinMode(led2, OUTPUT); // Pin para el LED 2
+  Serial.begin(9600); //Se inicializa la comunicacion con el pc.(Serial). 
+  lcd.begin(16, 2); //Se inicializa el LCD
+// Incluimos la biblioteca Adafruit_LiquidCrystal para poder imprimir en el LCD I2C.
+}
+void funcionalidadespulsadores() //Esta funcion es toda la logica de los pulsadores para tomar datos y tomar tiempo, solamente del funcionamiento correcto del circuito. 
+{
+  if (digitalRead(pin) == LOW && boton == true) //Por la forma en que esta el circuito (Pulldown) el pin del pulsador siempre va a ser negativo, pero en el instante que se presione, se va a cambiar el bool a true.  
+  {
+    boton = false; //Para que se vuelva a cambiar en caso que se presione otra vez el pulsador A. 
+    digitalWrite(led, !digitalRead(led));//Si se presiona el pulsador, se cambia el estado del led, si estaba prendido se apaga y si estaba apagado se prende. 
+    
+    tiempo = millis()- tiempo; //Esto es para no tener en cuenta el tiempo en el que no se estaban recolectando datos para procesar. 
+    if (digitalRead(led) == HIGH && digitalRead(led2) == LOW) { //Esto es para prender ambos leds si se prende el primero solo cuando se presiona el pulsador A. 
+      digitalWrite(led2, digitalRead(led));
+    }
+    else if (digitalRead(led) == LOW && digitalRead(led2) == HIGH) { //Esto es para apagar ambos leds si se apaga el primero al presionar el pulsador A. 
+      digitalWrite(led2, digitalRead(led));
+    }
+  }
+  if (digitalRead(pin) == HIGH && boton == false) { //Esto pa almacenar que se presiono el pulsador y decirle al siguiente ciclo que prenda o apague porque se presiono el pulsador. 
+    boton = true;
+    medirtiempo = true; //Para que nunca se muestre o halle el tiempo cuando se presiona el boton A. 
+  }
+
+  if (digitalRead(pin2) == LOW && boton2 == true) { //Esto es unicamente para prender el led2
+    boton2 = false;
+    tiempo = millis(); //Para restar luego y obtener unicamente el tiempo que transcurre mientras se recolectan los datos.
+    seconds = tiempo;
+    digitalWrite(led2,!digitalRead(led2)); //Se pasa de apagado a encendido al led.
+  }
+  if (digitalRead(pin2) == HIGH && boton2 == false && digitalRead(led) == HIGH) //Aca es donde se almacena la presionada del pulsador B, se pone el boton2 en true. 
+{
+    boton2 = true;
+    medirtiempo = !medirtiempo; //Cuando se presiona el pulsador B, por lo tanto cuando se apaga el led2 y cuando se deja de recolectar datos para procesarlos e imprimirlos, es cuando se mide el tiempo que transcurrio. 
+  }
+  if (digitalRead(led2) == HIGH)//Si hemos activado el pulsador A, entonces se van a estar imprimiendo en monitor serial los datos que se van a estar generando.
+{
+    Serial.println(analogRead(sensor));
+  }
+  if (digitalRead(led) == HIGH && digitalRead(led2) == HIGH && medirtiempo==true) //Si los leds estan prendidos, quiere decir que estamos recibiendo todavia los datos por lo que no hay que mostrar ni procesar nada aun. 
+{
+    lcd.setBacklight(1);
+    //lcd.print(analogRead(sensor));
+    lcd.clear();
+  }
+}
+void tiempoejecucion(){
+ if (digitalRead(led) == HIGH && medirtiempo == false)
+  {
+    tiempo = millis()- tiempo; //Se resta el tiempo anterior que es cuando se presiona el pulsador para empezar a recolectar datos y poder tener unicamente el tiempo de recoleccion que es el que nos interesa.
+    tiempos = tiempo/1000; //Tiempo en segundos. 
+    lcd.clear();
+    //Para pasar el tiempo a segundos porque la funcion millis(), lo mide en milisegundos.
+    medirtiempo = true;
+  } 
+}
+void identificaronda(float* arreglo, int capacidad, float amplitudmaxactual, float amplitudminactual) {
+  bool cuadrada = false;
+  bool triangular = true;
+  int indicemax = 0;
+  int indicemin = 0;
+
+  // Detección de onda cuadrada (sin cambios)
+  for(int i = 0; i < 3; i++) {
+    if (arreglo[i] == amplitudmaxactual || arreglo[i] == amplitudminactual || arreglo[i] == 10000 || arreglo[i] == -10000 || arreglo[i] == 0) {
+      cuadrada = true; 
+    } else {
+      cuadrada = false;
+      break;
+    }
+  }
+
+  if (cuadrada == true) 
+  {
+    cantcuadrada++;
+    Serial.println("La onda es cuadrada");
+  } 
+  else 
+    {
+    for (int i = 0; i < capacidad; i++) 
+    {
+      if (arreglo[i] == amplitudmaxactual) {
+        indicemax = i;
+      } else if (arreglo[i] == amplitudminactual) {
+        indicemin = i;
+      }
+    }
+    if (triangular == true) {
+      Serial.println("La onda es triangular");
+      canttriangular++;
+    } else
+      {
+      Serial.println("La onda es sinusoidal");
+      cantsenoidal++;
+    }
+  }
+}
+void imprimirarreglo()
+{
+ for (int k = 0; k < capacidad; k++)
+ {
+   Serial.println(arreglo[k]); 
+ }
+}
+void amplitud(float*arreglo,int capacidad)
+{
+   for (int i = 0; i < capacidad; i++) 
+   {
+    if (arreglo[i] != 0 && arreglo[i]!= -1)
+    {
+      if (arreglo[i] >= amplitudmaxactual)
+      {
+      amplitudmaxactual = arreglo[i];
+      } 
+      else if (arreglo[i] < amplitudminactual)
+      {
+      amplitudminactual = arreglo[i];
+      }
+      if (arreglo[i] >= amplitudmax)
+      {
+      amplitudmax = arreglo[i];
+      } 
+      else if (arreglo[i] < amplitudmin)
+      {
+      amplitudmin = arreglo[i];
+      }
+    }
+   }
+}
+float calcularciclos(float* arreglo, int capacidad, float amplitudmax, float amplitudmin) {
+  int num_ciclos = 0;
+  bool subiendo = true;
+  float umbral_superior = 0.9 * amplitudmax;
+  float umbral_inferior = 0.1 * amplitudmin;
+
+  for (int i = 1; i < capacidad - 1; i++) {
+    if (subiendo && arreglo[i] > umbral_superior) {
+      num_ciclos++;
+      subiendo = false;
+    } else if (!subiendo && arreglo[i] < umbral_inferior) {
+      num_ciclos++;
+      subiendo = true;
+    }
+  }
+  return num_ciclos/2;
+}
+void reeestableceramplitudes()
+{
+       amplitudmax = -10000;
+       amplitudmin = 10000;
+       if (analogRead(sensor) >= amplitudmax)
+       {
+       amplitudmax = analogRead(sensor);
+       }
+       if (analogRead(sensor) < amplitudmin)
+       {
+       amplitudmin = analogRead(sensor);
+       }
+       reiniciaramplitud = false;
+}
+void reeestableceramplitudesactuales()
+{
+ amplitudmaxactual = -10000;
+       amplitudminactual = 10000;
+}
+void imprimircosasenelserial()
+{
+ Serial.println("Datos procesados, imprimir en LCD");
+   Serial.print("Cantidad de datos procesados: ");
+   Serial.println(cantidatos);
+   Serial.print("Tiempo: ");
+   Serial.println(tiempos);
+   Serial.print("Ciclos: ");
+   Serial.println(ciclos);
+   Serial.print("Frecuencia: ");
+   Serial.println(frecuencia);
+   Serial.print("La amplitud es: ");
+   Serial.println(Amplitud);
+   Serial.print("Valor maximo: ");
+   Serial.println(amplitudmax);
+   Serial.print("Valor minimo: ");
+   Serial.println(amplitudmin); 
+}
+void imprimircuadrada()
+{
+   lcd.setCursor(0, 0);
+    lcd.print("La onda es: ");
+    lcd.setCursor(0,1);
+    lcd.print("Cuadrada");
+    delay(500);
+    lcd.clear();
+}
+void imprimirtriangular()
+{
+  lcd.setCursor(0, 0);
+    lcd.print("La onda es: ");
+    lcd.setCursor(0,1);
+    lcd.print("Triangular");
+    delay(500);
+    lcd.clear();
+}
+void imprimirenlcd()
+{
+   lcd.setCursor(0, 0);
+   lcd.print("Datos procesados: ");
+   lcd.setCursor(0,1);
+   lcd.print(cantidatos);
+   delay(500);
+   lcd.clear();  
+   lcd.setCursor(0, 0);
+   lcd.print("Tiempo: ");
+   lcd.setCursor(0,1);
+   lcd.print(tiempos);
+   delay(500);
+   lcd.clear(); 
+   lcd.setCursor(0, 0);
+   lcd.print("Ciclos: ");
+   lcd.setCursor(0,1);
+   lcd.print(ciclos);
+   delay(500);
+   lcd.clear(); 
+   lcd.setCursor(0, 0);
+   lcd.print("Frecuencia: ");
+   lcd.setCursor(0,1);
+   lcd.print(frecuencia);
+   delay(500);
+   lcd.clear(); 
+   lcd.setCursor(0, 0);
+   lcd.print("La amplitud es: ");
+   lcd.setCursor(0,1);
+   lcd.print(Amplitud);
+   delay(500);
+   lcd.clear();
+   lcd.setCursor(0, 0);
+   lcd.print("Valor maximo: ");
+   lcd.setCursor(0,1);
+   lcd.print(amplitudmax);
+   delay(500);
+   lcd.clear();
+   lcd.setCursor(0, 0);
+   lcd.print("Valor minimo: ");
+   lcd.setCursor(0,1);
+   lcd.print(amplitudmin);
+   delay(500);
+   lcd.clear();  
+}
+//
+//
+//
+//
+//
+//
+//
+//
+//Programa principal.
+void loop()
+{ 
+  funcionalidadespulsadores();
+  tiempoejecucion();
+  unsigned int currentseconds = millis();
+  if (digitalRead(led) == HIGH && digitalRead(led2)== HIGH)
+  {
+   if (reiniciaramplitud == true)
+     { 
+      reeestableceramplitudes();
+     } 
+   arreglo[x] = analogRead(sensor);
+   cantidatos++;  
+   x++;  
+   if (x == capacidad-1)//Esta condicion es en caso que se llegue a llenar el arreglo antes que pase el segundo para que se procesen los datos. 
+    {   
+    reeestableceramplitudesactuales();
+    amplitud(arreglo,capacidad);
+    ciclos = ciclos  + calcularciclos(arreglo,capacidad,amplitudmaxactual,amplitudminactual);
+    identificaronda(arreglo,capacidad,amplitudmaxactual,amplitudminactual);
+    delete[] arreglo;
+    arreglo = new float[capacidad];
+    x = 0; 
+    }
+  }  
+  if (digitalRead(led2)== HIGH)
+  {
+    algo = true;
+    if (digitalRead(led) == HIGH && (currentseconds - seconds >= (1000)))
+    {
+     Serial.println("Procesar datos");
+     reeestableceramplitudesactuales();
+     amplitud(arreglo,capacidad);
+     ciclos = ciclos  + calcularciclos(arreglo,capacidad,amplitudmaxactual,amplitudminactual);
+     identificaronda(arreglo,capacidad,amplitudmaxactual,amplitudminactual);
+     x = 0;
+     delete[] arreglo; 
+     arreglo = new float[capacidad];
+     seconds = currentseconds;
+    }
+  }
+  else if (digitalRead(led) == HIGH && algo == true)
+  {
+   reeestableceramplitudesactuales();
+   amplitud(arreglo,capacidad);
+   Amplitud = (amplitudmax-amplitudmin)/2;
+   ciclos = ciclos  + calcularciclos(arreglo,capacidad,amplitudmaxactual,amplitudminactual);
+   frecuencia = ciclos/tiempos;
+   identificaronda(arreglo,capacidad,amplitudmaxactual,amplitudminactual);
+   imprimircosasenelserial();
+   imprimirenlcd();
+   
+   if (cantcuadrada > cantsenoidal && cantcuadrada > canttriangular)
+   {
+   imprimircuadrada();
+   }
+   else
+   {
+   imprimirtriangular();
+   }
+   x = 0;
+   Amplitud = 0;
+   delete[] arreglo; 
+   arreglo = new float[capacidad];
+   cantidatos = 0;
+   ciclos = 0;
+   canttriangular = 0;
+   cantsenoidal = 0; 
+   cantcuadrada = 0;
+   reiniciaramplitud = true;
+   algo = false;
+  }
+}
+
+   reiniciaramplitud = true;
+   algo = false;
+  }
+}
